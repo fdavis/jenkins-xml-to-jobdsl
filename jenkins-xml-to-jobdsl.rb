@@ -400,6 +400,8 @@ class PropertiesNodeHandler < Struct.new(:node)
         ).save!
       when 'hudson.plugins.copyartifact.CopyArtifactPermissionProperty'
         CopyArtifactPermissionPropertyHandler.new(i).process(job_name, currentDepth, indent)
+      when 'org.jenkinsci.plugins.compressbuildlog.BuildLogCompressor'
+        puts " " * currentDepth + "compressBuildLog()"
       else
         pp i
       end
@@ -1566,7 +1568,9 @@ class FreestyleDefinitionNodeHandler < Struct.new(:node)
       when 'logRotator'
         LogRotatorNodeHandler.new(i).process(job_name, currentDepth, indent)
       else
+        pp 'I am pp'
         pp i
+        pp 'I am pp'
       end
     end
     ConfigureBlock.print
