@@ -770,6 +770,7 @@ class NaginatorPublisherNodeHandler < Struct.new(:node)
           puts " " * (currentDepth + indent * 2 ) + "#{j.name}(#{j.text.to_i})"
         end
         puts " " * (currentDepth + indent ) + "}"
+        puts " " * currentDepth + "}"
       end
     end
     puts " " * depth + "}"
@@ -1752,7 +1753,6 @@ OptionParser.new do |opts|
     "Disable all jobs (default false)",
   ) do |disable_force|
     disable = disable_force
-    pp "we disable"
   end
 end.parse!
 
