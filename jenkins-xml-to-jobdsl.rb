@@ -751,7 +751,7 @@ class NaginatorPublisherNodeHandler < Struct.new(:node)
         if not i.text.empty?
           puts " " * currentDepth + "regexpForRerun('#{i.text}')"
         end
-      when 'rerunIfUnstable', 'rerunMatrixPart', 'rerunIfUnstable', 'rerunIfUnstable'
+      when 'rerunIfUnstable', 'rerunMatrixPart', 'checkRegexp', 'regexpForMatrixParent'
         puts " " * currentDepth + "#{i.name}(#{i.text})"
       when 'maxSchedule'
         puts " " * currentDepth + "#{i.name}(#{i.text.to_i})"
@@ -907,6 +907,10 @@ class ExtendedEmailNodeHandler < Struct.new(:node)
             puts " " * (currentDepth + indent) + "}"
           when 'hudson.plugins.emailext.plugins.trigger.UnstableTrigger'
             puts " " * (currentDepth + indent) + "unstable {"
+            print_trigger_block(j, currentDepth, indent)
+            puts " " * (currentDepth + indent) + "}"
+          when 'hudson.plugins.emailext.plugins.trigger.SecondFailureTrigger'
+            puts " " * (currentDepth + indent) + "secondFailure {"
             print_trigger_block(j, currentDepth, indent)
             puts " " * (currentDepth + indent) + "}"
           else
@@ -1564,7 +1568,7 @@ end
 class FreestyleDefinitionNodeHandler < Struct.new(:node)
   include Helper
 
-  def process(job_name, depth, indent)
+  def process(job_name, depth, indent, disable)
     puts "freeStyleJob('#{job_name}') {"
     currentDepth = depth + indent
     node.elements.each do |i|
@@ -1589,7 +1593,13 @@ class FreestyleDefinitionNodeHandler < Struct.new(:node)
         end
 #      when 'keepDependencies', 'concurrentBuild', 'disabled', 'fingerprintingDisabled',
 #     'runHeadless', 'resolveDependencies', 'siteArchivingDisabled', 'archivingDisabled', 'incrementalBuild'
-      when 'disabled', 'concurrentBuild'
+      when 'disabled'
+        if disable
+          puts " " * currentDepth + "disabled(true)"
+        else
+          puts " " * currentDepth + "#{i.name}(#{i.text})"
+        end
+      when 'concurrentBuild'
         puts " " * currentDepth + "#{i.name}(#{i.text})"
       when 'blockBuildWhenDownstreamBuilding'
         if i.text == 'true'
@@ -1608,9 +1618,7 @@ class FreestyleDefinitionNodeHandler < Struct.new(:node)
       when 'logRotator'
         LogRotatorNodeHandler.new(i).process(job_name, currentDepth, indent)
       else
-        pp 'I am pp'
         pp i
-        pp 'I am pp'
       end
     end
     ConfigureBlock.print
@@ -1726,6 +1734,7 @@ end
 
 depth = 0
 indent = 4
+disable = false
 
 OptionParser.new do |opts|
   opts.banner = "Usage: ruby jenkins-xml-to-jobdsl.rb [OPTIONS] path/to/config.xml"
@@ -1736,6 +1745,14 @@ OptionParser.new do |opts|
     "Indentation level (default 4)",
   ) do |indentation_level|
     indent = indentation_level.to_i || 4
+  end
+  opts.on(
+    "-d",
+    "--disable",
+    "Disable all jobs (default false)",
+  ) do |disable_force|
+    disable = disable_force
+    pp "we disable"
   end
 end.parse!
 
@@ -1759,7 +1776,7 @@ Nokogiri::XML::Reader(File.open(f)).each do |node|
   elsif node.name == 'project' && node.node_type == Nokogiri::XML::Reader::TYPE_ELEMENT && node.depth == 0
     FreestyleDefinitionNodeHandler.new(
       Nokogiri::XML(node.outer_xml).at('./project')
-    ).process(job, depth, indent)
+    ).process(job, depth, indent, disable)
   else
     #pp node
   end
