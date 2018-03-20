@@ -402,6 +402,8 @@ class PropertiesNodeHandler < Struct.new(:node)
         CopyArtifactPermissionPropertyHandler.new(i).process(job_name, currentDepth, indent)
       when 'org.jenkinsci.plugins.compressbuildlog.BuildLogCompressor'
         puts " " * currentDepth + "compressBuildLog()"
+      when 'com.chikli.hudson.plugin.naginator.NaginatorOptOutProperty'
+        # don't think this is needed in groovy-land
       else
         pp i
       end
@@ -739,6 +741,42 @@ class IrcTargetsNodeHandler < Struct.new(:node)
 
 end
 
+class NaginatorPublisherNodeHandler < Struct.new(:node)
+  def process(job_name, depth, indent)
+    puts " " * depth + "naginatorPublisher {"
+    currentDepth = depth + indent
+    node.elements.each do |i|
+      case i.name
+      when 'regexpForRerun'
+        if not i.text.empty?
+          puts " " * currentDepth + "regexpForRerun('#{i.text}')"
+        end
+      when 'rerunIfUnstable', 'rerunMatrixPart', 'rerunIfUnstable', 'rerunIfUnstable'
+        puts " " * currentDepth + "#{i.name}(#{i.text})"
+      when 'maxSchedule'
+        puts " " * currentDepth + "#{i.name}(#{i.text.to_i})"
+      when 'delay'
+        puts " " * currentDepth + "delay {"
+        case i.attribute('class').value
+        when 'com.chikli.hudson.plugin.naginator.ProgressiveDelay'
+          puts " " * (currentDepth + indent) + "progressiveDelay {"
+        when 'com.chikli.hudson.plugin.naginator.FixedDelay'
+          puts " " * (currentDepth + indent) + "fixedDelay {"
+        else
+          pp i
+        end
+
+        i.elements.each do |j|
+          puts " " * (currentDepth + indent * 2 ) + "#{j.name}(#{j.text.to_i})"
+        end
+        puts " " * (currentDepth + indent ) + "}"
+      end
+    end
+    puts " " * depth + "}"
+  end
+end
+
+
 class IrcPublisherNodeHandler < Struct.new(:node)
   def process(job_name, depth, indent)
     puts " " * depth + "irc {"
@@ -986,6 +1024,8 @@ class PublishersNodeHandler < Struct.new(:node)
         ChatterNotifierHandler.new(i).process(job_name, currentDepth, indent)
       when 'hudson.plugins.parameterizedtrigger.BuildTrigger'
         TriggerNodeHandler.new(i).process(job_name, currentDepth, indent)
+      when 'com.chikli.hudson.plugin.naginator.NaginatorPublisher'
+        NaginatorPublisherNodeHandler .new(i).process(job_name, currentDepth, indent)
       else
         pp i
       end
