@@ -747,11 +747,7 @@ class NaginatorPublisherNodeHandler < Struct.new(:node)
     currentDepth = depth + indent
     node.elements.each do |i|
       case i.name
-      when 'regexpForRerun'
-        if not i.text.empty?
-          puts " " * currentDepth + "regexpForRerun('#{i.text}')"
-        end
-      when 'rerunIfUnstable', 'rerunMatrixPart', 'checkRegexp', 'regexpForMatrixParent'
+      when 'rerunIfUnstable', 'rerunMatrixPart', 'checkRegexp', 'regexpForMatrixParent', 'regexpForRerun'
         puts " " * currentDepth + "#{i.name}(#{i.text})"
       when 'maxSchedule'
         puts " " * currentDepth + "#{i.name}(#{i.text.to_i})"
