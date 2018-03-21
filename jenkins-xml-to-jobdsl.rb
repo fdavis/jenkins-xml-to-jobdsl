@@ -1588,6 +1588,8 @@ class FreestyleDefinitionNodeHandler < Struct.new(:node)
         puts " " * currentDepth + "#{i.name}(#{i.text})"
       when 'properties'
         PropertiesNodeHandler.new(i).process(job_name, currentDepth, indent)
+      when 'authToken'
+        puts " " * currentDepth + "authenticationToken('#{i.text}')"
       when 'scm'
         ScmDefinitionNodeHandler.new(i).process(job_name, currentDepth, indent)
       when 'canRoam', 'assignedNode'
