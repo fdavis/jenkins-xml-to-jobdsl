@@ -599,6 +599,37 @@ class TriggerDefinitionNodeHandler < Struct.new(:node)
   def process(job_name, depth, indent)
     puts " " * depth + "triggers {"
     currentDepth = depth + indent
+    node.elements.each do |i|
+      case i.name
+      when 'jenkins.triggers.ReverseBuildTrigger'
+        puts " " * currentDepth + "upstream {"
+        spec = "unknown"
+        threshold = "SUCCESS"
+        i.elements.each do |j|
+            case j.name
+            when 'upstreamProjects'
+              project  = j.child.content
+              puts " " * (currentDepth + indent) + "upstreamProjects('#{project}')"
+            when 'threshold'
+              j.elements.each do |k|
+                  case k.name
+                  when 'name'
+                    spec = k.child.content
+                  end
+              end
+              puts " " * (currentDepth + indent) + "threshold('#{spec}')"
+            end
+        end
+        puts " " * currentDepth + "}"
+      when 'hudson.triggers.TimerTrigger'
+        puts " " * currentDepth + "cron {"
+        cron = i.first_element_child.child.content
+        puts " " * (currentDepth + indent) + "spec('''\\\n#{cron}''')"
+        puts " " * currentDepth + "}"
+      else
+        pp i
+      end
+    end
     puts " " * depth + "}"
   end
 end
