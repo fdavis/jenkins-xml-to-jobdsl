@@ -743,15 +743,19 @@ end
 
 class NaginatorPublisherNodeHandler < Struct.new(:node)
   def process(job_name, depth, indent)
+    delayed = false
     puts " " * depth + "naginatorPublisher {"
     currentDepth = depth + indent
     node.elements.each do |i|
       case i.name
-      when 'rerunIfUnstable', 'rerunMatrixPart', 'checkRegexp', 'regexpForMatrixParent', 'regexpForRerun'
+      when 'regexpForRerun'
+        puts " " * currentDepth + "#{i.name}('#{i.text}')"
+      when 'rerunIfUnstable', 'rerunMatrixPart', 'checkRegexp', 'regexpForMatrixParent'
         puts " " * currentDepth + "#{i.name}(#{i.text})"
       when 'maxSchedule'
         puts " " * currentDepth + "#{i.name}(#{i.text.to_i})"
       when 'delay'
+        delayed = true
         puts " " * currentDepth + "delay {"
         case i.attribute('class').value
         when 'com.chikli.hudson.plugin.naginator.ProgressiveDelay'
@@ -768,6 +772,10 @@ class NaginatorPublisherNodeHandler < Struct.new(:node)
         puts " " * (currentDepth + indent ) + "}"
         puts " " * currentDepth + "}"
       end
+    end
+    # this section is required in DSL but not in XML
+    if not delayed
+        puts " " * currentDepth + "delay {}"
     end
     puts " " * depth + "}"
   end
