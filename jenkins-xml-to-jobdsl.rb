@@ -354,6 +354,7 @@ class PropertiesNodeHandler < Struct.new(:node)
   def process(job_name, depth, indent)
     # hack... need to print parameter block outside of property block. :(
     parameter_node_block = nil
+    compress_build_logs = false
     puts " " * depth + "properties {"
     currentDepth = depth + indent
     node.elements.each do |i|
@@ -401,14 +402,13 @@ class PropertiesNodeHandler < Struct.new(:node)
       when 'hudson.plugins.copyartifact.CopyArtifactPermissionProperty'
         CopyArtifactPermissionPropertyHandler.new(i).process(job_name, currentDepth, indent)
       when 'org.jenkinsci.plugins.compressbuildlog.BuildLogCompressor'
-        puts " " * currentDepth + "compressBuildLog()"
-      when 'com.chikli.hudson.plugin.naginator.NaginatorOptOutProperty'
-        # don't think this is needed in groovy-land
+        compress_build_logs = true
       else
         pp i
       end
     end
     puts " " * depth + "}"
+    puts " " * depth + "compressBuildLog()"
     if parameter_node_block
       parameter_node_block.each do |i|
         puts "#{i}"
