@@ -359,6 +359,7 @@ class PropertiesNodeHandler < Struct.new(:node)
     currentDepth = depth + indent
     node.elements.each do |i|
       case i.name
+      when 'com.chikli.hudson.plugin.naginator.NaginatorOptOutProperty'
       when 'com.sonyericsson.rebuild.RebuildSettings'
         RebuildNodeHandler.new(i).process(job_name, currentDepth, indent)
       when 'hudson.security.AuthorizationMatrixProperty'
